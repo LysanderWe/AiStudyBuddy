@@ -1,0 +1,16 @@
+{
+  "name": "ai-study-buddy",
+  "version": "1.0.0",
+  "description": "AI-powered study companion for personalized learning",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server",
+    "dev": "live-server --port=3000"
+  },
+  "keywords": ["ai", "study", "learning", "education", "productivity"],
+  "author": "LysanderWe",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
