@@ -2,7 +2,8 @@
 let studyData = {
     streak: 0,
     totalHours: 0,
-    lastStudyDate: null
+    lastStudyDate: null,
+    plans: []
 };
 
 // Load data from localStorage
@@ -28,10 +29,23 @@ function updateDisplay() {
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
+    renderPlans();
 
     // Create plan button event
     document.getElementById('create-plan-btn').addEventListener('click', function() {
-        alert('Study plan creation coming soon!');
+        document.getElementById('plan-form').classList.remove('hidden');
+    });
+
+    // Cancel button event
+    document.getElementById('cancel-btn').addEventListener('click', function() {
+        document.getElementById('plan-form').classList.add('hidden');
+        document.getElementById('study-form').reset();
+    });
+
+    // Form submission
+    document.getElementById('study-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        createStudyPlan();
     });
 });
 
@@ -58,4 +72,53 @@ function updateStreak() {
     studyData.lastStudyDate = today;
     saveData();
     updateDisplay();
+}
+
+// Create a new study plan
+function createStudyPlan() {
+    const subject = document.getElementById('subject').value;
+    const duration = parseFloat(document.getElementById('duration').value);
+    const difficulty = document.getElementById('difficulty').value;
+
+    const plan = {
+        id: Date.now(),
+        subject: subject,
+        duration: duration,
+        difficulty: difficulty,
+        completed: false,
+        createdAt: new Date().toLocaleDateString()
+    };
+
+    studyData.plans.push(plan);
+    saveData();
+    renderPlans();
+
+    // Hide form and reset
+    document.getElementById('plan-form').classList.add('hidden');
+    document.getElementById('study-form').reset();
+}
+
+// Render study plans
+function renderPlans() {
+    const plansList = document.getElementById('plans-list');
+    plansList.innerHTML = '';
+
+    if (studyData.plans.length === 0) {
+        plansList.innerHTML = '<p>No study plans yet. Create your first plan!</p>';
+        return;
+    }
+
+    studyData.plans.forEach(plan => {
+        const planDiv = document.createElement('div');
+        planDiv.className = 'plan-item';
+        planDiv.innerHTML = `
+            <h4>${plan.subject}</h4>
+            <div class="plan-meta">
+                <span>${plan.duration}h</span>
+                <span>${plan.difficulty}</span>
+                <span>Created: ${plan.createdAt}</span>
+            </div>
+        `;
+        plansList.appendChild(planDiv);
+    });
 }
