@@ -6,6 +6,14 @@ let studyData = {
     plans: []
 };
 
+// Timer state
+let timerState = {
+    minutes: 25,
+    seconds: 0,
+    isRunning: false,
+    interval: null
+};
+
 // Load data from localStorage
 function loadData() {
     const saved = localStorage.getItem('studyBuddyData');
@@ -47,6 +55,22 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         createStudyPlan();
     });
+
+    // Timer controls
+    document.getElementById('start-timer-btn').addEventListener('click', startTimer);
+    document.getElementById('pause-timer-btn').addEventListener('click', pauseTimer);
+    document.getElementById('reset-timer-btn').addEventListener('click', resetTimer);
+
+    // Timer settings
+    document.getElementById('timer-minutes').addEventListener('change', function() {
+        if (!timerState.isRunning) {
+            timerState.minutes = parseInt(this.value);
+            timerState.seconds = 0;
+            updateTimerDisplay();
+        }
+    });
+
+    updateTimerDisplay();
 });
 
 // Update streak based on current date
@@ -121,4 +145,58 @@ function renderPlans() {
         `;
         plansList.appendChild(planDiv);
     });
+}
+
+// Timer functions
+function updateTimerDisplay() {
+    const minutes = String(timerState.minutes).padStart(2, '0');
+    const seconds = String(timerState.seconds).padStart(2, '0');
+    document.getElementById('timer-time').textContent = `${minutes}:${seconds}`;
+}
+
+function startTimer() {
+    if (timerState.isRunning) return;
+
+    timerState.isRunning = true;
+    timerState.interval = setInterval(function() {
+        if (timerState.seconds === 0) {
+            if (timerState.minutes === 0) {
+                // Timer finished
+                clearInterval(timerState.interval);
+                timerState.isRunning = false;
+                alert('Study session completed! Great job!');
+
+                // Add time to total hours
+                const sessionHours = parseInt(document.getElementById('timer-minutes').value) / 60;
+                studyData.totalHours = Math.round((studyData.totalHours + sessionHours) * 100) / 100;
+                updateStreak();
+                saveData();
+                updateDisplay();
+                resetTimer();
+                return;
+            }
+            timerState.minutes--;
+            timerState.seconds = 59;
+        } else {
+            timerState.seconds--;
+        }
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (timerState.interval) {
+        clearInterval(timerState.interval);
+        timerState.isRunning = false;
+    }
+}
+
+function resetTimer() {
+    if (timerState.interval) {
+        clearInterval(timerState.interval);
+    }
+    timerState.isRunning = false;
+    timerState.minutes = parseInt(document.getElementById('timer-minutes').value);
+    timerState.seconds = 0;
+    updateTimerDisplay();
 }
