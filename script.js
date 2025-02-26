@@ -32,6 +32,9 @@ function saveData() {
 function updateDisplay() {
     document.getElementById('streak').textContent = `${studyData.streak} days`;
     document.getElementById('total-hours').textContent = `${studyData.totalHours} hrs`;
+
+    const completedCount = studyData.plans.filter(plan => plan.completed).length;
+    document.getElementById('completed-plans').textContent = completedCount;
 }
 
 // Initialize the app
@@ -143,6 +146,15 @@ function renderPlans() {
                 <span>Created: ${plan.createdAt}</span>
             </div>
         `;
+
+        // Add complete button
+        const completeBtn = document.createElement('button');
+        completeBtn.textContent = plan.completed ? 'Completed' : 'Mark Complete';
+        completeBtn.className = 'complete-btn';
+        completeBtn.disabled = plan.completed;
+        completeBtn.onclick = () => completePlan(plan.id);
+
+        planDiv.appendChild(completeBtn);
         plansList.appendChild(planDiv);
     });
 }
@@ -199,4 +211,16 @@ function resetTimer() {
     timerState.minutes = parseInt(document.getElementById('timer-minutes').value);
     timerState.seconds = 0;
     updateTimerDisplay();
+}
+
+// Complete a study plan
+function completePlan(planId) {
+    const plan = studyData.plans.find(p => p.id === planId);
+    if (plan) {
+        plan.completed = true;
+        plan.completedAt = new Date().toLocaleDateString();
+        saveData();
+        renderPlans();
+        updateDisplay();
+    }
 }

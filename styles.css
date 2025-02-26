@@ -268,3 +268,24 @@ h2 {
     border-radius: 4px;
     text-align: center;
 }
+
+.complete-btn {
+    background: #48bb78;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.complete-btn:hover:not(:disabled) {
+    background: #38a169;
+}
+
+.complete-btn:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+}
