@@ -3,7 +3,8 @@ let studyData = {
     streak: 0,
     totalHours: 0,
     lastStudyDate: null,
-    plans: []
+    plans: [],
+    sessions: []
 };
 
 // Timer state
@@ -74,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     updateTimerDisplay();
+    updateAnalytics();
 });
 
 // Update streak based on current date
@@ -178,12 +180,22 @@ function startTimer() {
                 timerState.isRunning = false;
                 alert('Study session completed! Great job!');
 
-                // Add time to total hours
-                const sessionHours = parseInt(document.getElementById('timer-minutes').value) / 60;
+                // Add time to total hours and record session
+                const sessionMinutes = parseInt(document.getElementById('timer-minutes').value);
+                const sessionHours = sessionMinutes / 60;
                 studyData.totalHours = Math.round((studyData.totalHours + sessionHours) * 100) / 100;
+
+                // Record study session
+                studyData.sessions.push({
+                    date: new Date().toDateString(),
+                    duration: sessionMinutes,
+                    timestamp: Date.now()
+                });
+
                 updateStreak();
                 saveData();
                 updateDisplay();
+                updateAnalytics();
                 resetTimer();
                 return;
             }
@@ -222,5 +234,96 @@ function completePlan(planId) {
         saveData();
         renderPlans();
         updateDisplay();
+        updateAnalytics();
     }
+}
+
+// Update analytics and insights
+function updateAnalytics() {
+    updateInsights();
+    drawChart();
+}
+
+function updateInsights() {
+    const completedCount = studyData.plans.filter(plan => plan.completed).length;
+    const totalPlans = studyData.plans.length;
+    const completionRate = totalPlans > 0 ? Math.round((completedCount / totalPlans) * 100) : 0;
+
+    document.getElementById('completion-rate').textContent = `${completionRate}%`;
+
+    if (studyData.sessions.length > 0) {
+        const avgSession = Math.round(studyData.sessions.reduce((sum, session) => sum + session.duration, 0) / studyData.sessions.length);
+        document.getElementById('avg-session').textContent = `${avgSession} minutes`;
+
+        // Find most productive day
+        const dayCount = {};
+        studyData.sessions.forEach(session => {
+            const day = new Date(session.timestamp).toLocaleDateString('en-US', { weekday: 'long' });
+            dayCount[day] = (dayCount[day] || 0) + session.duration;
+        });
+
+        const mostProductiveDay = Object.keys(dayCount).reduce((a, b) => dayCount[a] > dayCount[b] ? a : b, 'Not enough data');
+        document.getElementById('productive-day').textContent = mostProductiveDay;
+    }
+}
+
+function drawChart() {
+    const canvas = document.getElementById('timeChart');
+    const ctx = canvas.getContext('2d');
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (studyData.sessions.length === 0) {
+        ctx.fillStyle = '#a0aec0';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data to display yet', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    // Get last 7 days of data
+    const last7Days = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        last7Days.push(date.toDateString());
+    }
+
+    // Calculate total minutes per day
+    const dailyMinutes = last7Days.map(day => {
+        return studyData.sessions
+            .filter(session => session.date === day)
+            .reduce((sum, session) => sum + session.duration, 0);
+    });
+
+    // Draw chart
+    const maxMinutes = Math.max(...dailyMinutes, 60);
+    const barWidth = canvas.width / 7;
+    const maxBarHeight = canvas.height - 60;
+
+    dailyMinutes.forEach((minutes, index) => {
+        const barHeight = (minutes / maxMinutes) * maxBarHeight;
+        const x = index * barWidth + 10;
+        const y = canvas.height - barHeight - 30;
+
+        // Draw bar
+        ctx.fillStyle = '#667eea';
+        ctx.fillRect(x, y, barWidth - 20, barHeight);
+
+        // Draw day label
+        ctx.fillStyle = '#4a5568';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        const dayName = new Date(last7Days[index]).toLocaleDateString('en-US', { weekday: 'short' });
+        ctx.fillText(dayName, x + (barWidth - 20) / 2, canvas.height - 5);
+
+        // Draw minutes label
+        if (minutes > 0) {
+            ctx.fillStyle = '#2d3748';
+            ctx.font = '10px Arial';
+            ctx.fillText(`${minutes}m`, x + (barWidth - 20) / 2, y - 5);
+        }
+    });
 }

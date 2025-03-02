@@ -85,6 +85,33 @@
                 </div>
             </div>
         </section>
+
+        <section id="analytics">
+            <h2>Study Analytics</h2>
+            <div class="analytics-grid">
+                <div class="chart-container">
+                    <h3>Study Time by Day</h3>
+                    <canvas id="timeChart" width="400" height="200"></canvas>
+                </div>
+                <div class="insights-container">
+                    <h3>Insights</h3>
+                    <div id="insights-list">
+                        <div class="insight-item">
+                            <strong>Most Productive Day:</strong>
+                            <span id="productive-day">Not enough data</span>
+                        </div>
+                        <div class="insight-item">
+                            <strong>Average Session:</strong>
+                            <span id="avg-session">25 minutes</span>
+                        </div>
+                        <div class="insight-item">
+                            <strong>Completion Rate:</strong>
+                            <span id="completion-rate">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script src="script.js"></script>
