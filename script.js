@@ -76,6 +76,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateTimerDisplay();
     updateAnalytics();
+
+    // Data management
+    document.getElementById('export-btn').addEventListener('click', exportData);
+    document.getElementById('import-btn').addEventListener('click', function() {
+        document.getElementById('import-file').click();
+    });
+    document.getElementById('import-file').addEventListener('change', importData);
 });
 
 // Update streak based on current date
@@ -326,4 +333,63 @@ function drawChart() {
             ctx.fillText(`${minutes}m`, x + (barWidth - 20) / 2, y - 5);
         }
     });
+}
+
+// Export data to JSON file
+function exportData() {
+    const dataStr = JSON.stringify(studyData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ai-study-buddy-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+}
+
+// Import data from JSON file
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+
+            // Validate data structure
+            if (typeof importedData === 'object' &&
+                importedData.hasOwnProperty('plans') &&
+                importedData.hasOwnProperty('sessions')) {
+
+                studyData = {
+                    streak: importedData.streak || 0,
+                    totalHours: importedData.totalHours || 0,
+                    lastStudyDate: importedData.lastStudyDate || null,
+                    plans: importedData.plans || [],
+                    sessions: importedData.sessions || []
+                };
+
+                saveData();
+                updateDisplay();
+                renderPlans();
+                updateAnalytics();
+
+                alert('Data imported successfully!');
+            } else {
+                alert('Invalid data format. Please select a valid backup file.');
+            }
+        } catch (error) {
+            alert('Error reading file. Please select a valid JSON file.');
+        }
+    };
+
+    reader.readAsText(file);
+
+    // Reset file input
+    event.target.value = '';
 }
