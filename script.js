@@ -31,8 +31,8 @@ function saveData() {
 
 // Update the display elements
 function updateDisplay() {
-    document.getElementById('streak').textContent = `${studyData.streak} days`;
-    document.getElementById('total-hours').textContent = `${studyData.totalHours} hrs`;
+    document.getElementById('streak').textContent = `${studyData.streak} day${studyData.streak !== 1 ? 's' : ''}`;
+    document.getElementById('total-hours').textContent = `${studyData.totalHours} hr${studyData.totalHours !== 1 ? 's' : ''}`;
 
     const completedCount = studyData.plans.filter(plan => plan.completed).length;
     document.getElementById('completed-plans').textContent = completedCount;
@@ -76,6 +76,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateTimerDisplay();
     updateAnalytics();
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
 
     // Data management
     document.getElementById('export-btn').addEventListener('click', exportData);
@@ -185,7 +190,16 @@ function startTimer() {
                 // Timer finished
                 clearInterval(timerState.interval);
                 timerState.isRunning = false;
-                alert('Study session completed! Great job!');
+
+                // Show completion notification
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('Study session completed!', {
+                        body: 'Great job! Time for a break.',
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎉</text></svg>'
+                    });
+                } else {
+                    alert('Study session completed! Great job!');
+                }
 
                 // Add time to total hours and record session
                 const sessionMinutes = parseInt(document.getElementById('timer-minutes').value);
